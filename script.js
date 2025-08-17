@@ -55,14 +55,19 @@ window.addEventListener('scroll', () => {
   }
 });
 
-// Contact form handling
+// Contact form handling with Formspree
 const contactForm = document.querySelector('.contact-form');
 if (contactForm) {
   contactForm.addEventListener('submit', function(e) {
     e.preventDefault();
     
-    // Get form data
+    // Get form elements
+    const submitBtn = this.querySelector('.submit-btn');
+    const btnText = submitBtn.querySelector('.btn-text');
+    const btnLoading = submitBtn.querySelector('.btn-loading');
     const formData = new FormData(this);
+    
+    // Get form data
     const name = formData.get('name');
     const email = formData.get('email');
     const message = formData.get('message');
@@ -78,11 +83,37 @@ if (contactForm) {
       return;
     }
     
-    // Simulate form submission (replace with actual form handling)
-    showNotification('Thank you for your message! I\'ll get back to you soon.', 'success');
+    // Show loading state
+    submitBtn.disabled = true;
+    btnText.style.display = 'none';
+    btnLoading.style.display = 'inline-flex';
     
-    // Reset form
-    this.reset();
+    // Submit to Formspree
+    fetch(this.action, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Accept': 'application/json'
+      }
+    })
+    .then(response => {
+      if (response.ok) {
+        showNotification('Thank you for your message! I\'ll get back to you soon.', 'success');
+        this.reset();
+      } else {
+        throw new Error('Network response was not ok');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      showNotification('Sorry, there was an error sending your message. Please try again or contact me directly.', 'error');
+    })
+    .finally(() => {
+      // Reset button state
+      submitBtn.disabled = false;
+      btnText.style.display = 'inline';
+      btnLoading.style.display = 'none';
+    });
   });
 }
 
